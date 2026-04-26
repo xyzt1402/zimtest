@@ -26,7 +26,6 @@ interface MemoryCarouselProps {
 const RENDER_DISTANCE = CARD_CONFIG.MAX_VISIBLE + 1;
 const CARD_RATIO = 764 / 420;
 
-const DESKTOP_GAP = 48;
 const TABLET_GAP = 32;
 const MOBILE_OVERLAP = 0.65;
 
@@ -44,94 +43,119 @@ export function MemoryCarousel({
         prefersReducedMotion,
     } = useMemoryCarousel(moments);
 
+    const prevIndexRef = useRef(currentIndex);
+    const [prevIndex, setPrevIndex] = useState(currentIndex);
+
+    useEffect(() => {
+        setPrevIndex(prevIndexRef.current);
+        prevIndexRef.current = currentIndex;
+    }, [currentIndex]);
+
     const activeCardRef = useRef<MemoryCardHandle | null>(null);
 
     // ================================
-    // Responsive
+    // Responsive container
     // ================================
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [containerWidth, setContainerWidth] = useState(320);
 
     useEffect(() => {
         if (!containerRef.current) return;
-
         const observer = new ResizeObserver(([entry]) => {
             setContainerWidth(entry.contentRect.width);
         });
-
         observer.observe(containerRef.current);
         return () => observer.disconnect();
     }, []);
 
     const isMobile = containerWidth <= 480;
-    const isTablet = containerWidth <= 1024;
+    const isTablet = containerWidth > 480 && containerWidth <= 1024;
 
-    const getCardSize = () => {
+    // ================================
+    // Card size
+    // ================================
+    const getCardSize = useCallback(() => {
         if (isMobile) {
             const width = containerWidth * 0.68;
             return { width, height: width * CARD_RATIO };
         }
-
         const width = Math.min(420, containerWidth * 0.8);
         return { width, height: width * CARD_RATIO };
-    };
+    }, [isMobile, containerWidth]);
 
     const { width: cardWidth, height: cardHeight } = getCardSize();
 
-    const getOffset = (distance: number) => {
-        if (isMobile) return distance * cardWidth * MOBILE_OVERLAP;
-        if (isTablet) return distance * (cardWidth + TABLET_GAP);
-        return distance * (cardWidth + DESKTOP_GAP);
-    };
+    // ================================
+    // Offset calculation
+    // ================================
+    const getOffset = useCallback(
+        (distance: number): number => {
+            if (isMobile) {
+                return distance * cardWidth * MOBILE_OVERLAP;
+            }
+            if (isTablet) {
+                return distance * (cardWidth + TABLET_GAP);
+            }
+            if (distance === 0) return 0;
+
+            const sign = distance > 0 ? 1 : -1;
+            let offset = 0;
+
+            for (let step = 1; step <= Math.abs(distance); step++) {
+                const prevScale = Math.max(
+                    0.4,
+                    1 - (step - 1) * CARD_CONFIG.SCALE_REDUCTION
+                );
+                const curScale = Math.max(
+                    0.4,
+                    1 - step * CARD_CONFIG.SCALE_REDUCTION
+                );
+
+                offset +=
+                    (cardWidth * prevScale) / 2 +
+                    CARD_CONFIG.GAP +
+                    (cardWidth * curScale) / 2;
+            }
+
+            return sign * offset;
+        },
+        [isMobile, isTablet, cardWidth]
+    );
 
     // ================================
-    // Drag (state-based)
+    // Drag
     // ================================
-    const [drag, setDrag] = useState({
-        isDragging: false,
-        startX: 0,
-        delta: 0,
-    });
-
-    const rafRef = useRef<number | null>(null);
+    const dragStartX = useRef(0);
+    const [dragDelta, setDragDelta] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
 
     const onPointerDown = (e: React.PointerEvent) => {
-        setDrag({
-            isDragging: true,
-            startX: e.clientX,
-            delta: 0,
-        });
+        setIsDragging(true);
+        dragStartX.current = e.clientX;
     };
 
     const onPointerMove = (e: React.PointerEvent) => {
-        if (!drag.isDragging) return;
-
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-
-        rafRef.current = requestAnimationFrame(() => {
-            setDrag((prev) => ({
-                ...prev,
-                delta: e.clientX - prev.startX,
-            }));
-        });
+        if (!isDragging) return;
+        setDragDelta(e.clientX - dragStartX.current);
     };
 
     const onPointerUp = () => {
-        if (!drag.isDragging) return;
+        if (!isDragging) return;
 
         const threshold = cardWidth * 0.2;
 
-        if (drag.delta > threshold) {
-            navigateTo((currentIndex - 1 + moments.length) % moments.length, { autoPlay: true });
-        } else if (drag.delta < -threshold) {
-            navigateTo((currentIndex + 1) % moments.length, { autoPlay: true });
+        if (dragDelta > threshold) {
+            navigateTo((currentIndex - 1 + moments.length) % moments.length, {
+                autoPlay: true,
+            });
+        } else if (dragDelta < -threshold) {
+            navigateTo((currentIndex + 1) % moments.length, {
+                autoPlay: true,
+            });
         }
 
-        setDrag({
-            isDragging: false,
-            startX: 0,
-            delta: 0,
-        });
+        setDragDelta(0);
+        setIsDragging(false);
     };
 
     // ================================
@@ -142,11 +166,17 @@ export function MemoryCarousel({
             switch (e.key) {
                 case 'ArrowRight':
                 case 'ArrowDown':
-                    navigateTo((currentIndex + 1) % moments.length, { autoPlay: true });
+                    navigateTo((currentIndex + 1) % moments.length, {
+                        autoPlay: true,
+                        fromKeyboard: true,
+                    });
                     break;
                 case 'ArrowLeft':
                 case 'ArrowUp':
-                    navigateTo((currentIndex - 1 + moments.length) % moments.length, { autoPlay: true });
+                    navigateTo((currentIndex - 1 + moments.length) % moments.length, {
+                        autoPlay: true,
+                        fromKeyboard: true,
+                    });
                     break;
                 case 'Enter':
                 case ' ':
@@ -162,9 +192,25 @@ export function MemoryCarousel({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [handleKeyDown]);
 
+    // ================================
+    // Transition
+    // ================================
     const TRANSITION = prefersReducedMotion
         ? 'none'
         : 'transform 0.48s cubic-bezier(0.4,0,0.2,1), opacity 0.48s';
+
+    const makeEnteringRef = useCallback(
+        (targetOffset: number, scale: number, opacity: number) =>
+            (el: HTMLDivElement | null) => {
+                if (!el) return;
+                requestAnimationFrame(() => {
+                    el.style.transition = TRANSITION;
+                    el.style.transform = `translateX(calc(-50% + ${targetOffset}px)) translateY(-50%) scale(${scale})`;
+                    el.style.opacity = String(opacity);
+                });
+            },
+        [TRANSITION]
+    );
 
     return (
         <section className="mc-section">
@@ -176,7 +222,10 @@ export function MemoryCarousel({
             <div
                 ref={containerRef}
                 className="mc-track-wrapper"
-                style={{ height: `${cardHeight}px`, touchAction: 'pan-y' }}
+                style={{
+                    height: `${cardHeight}px`,
+                    touchAction: 'pan-y',
+                }}
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
                 onPointerUp={onPointerUp}
@@ -189,20 +238,21 @@ export function MemoryCarousel({
 
                         if (absDistance > RENDER_DISTANCE) return null;
 
-                        // ✅ derive direction instead of previousIndex
-                        const direction = Math.sign(currentIndex - index);
+                        const prevDistance = index - prevIndex;
+                        const prevAbsDistance = Math.abs(prevDistance);
 
                         const isEntering =
-                            absDistance <= CARD_CONFIG.MAX_VISIBLE &&
-                            Math.abs(distance - direction) > CARD_CONFIG.MAX_VISIBLE;
+                            !prefersReducedMotion &&
+                            prevAbsDistance > CARD_CONFIG.MAX_VISIBLE &&
+                            absDistance <= CARD_CONFIG.MAX_VISIBLE;
 
                         const baseOffset = getOffset(distance);
-                        const dragOffset = drag.isDragging ? drag.delta * 0.6 : 0;
+                        const dragOffset = isDragging ? dragDelta * 0.6 : 0;
                         const targetOffset = baseOffset + dragOffset;
 
-                        const fromOffset = isEntering
-                            ? getOffset(distance + direction)
-                            : targetOffset;
+                        const enterFromOffset = getOffset(
+                            distance + Math.sign(distance)
+                        );
 
                         const isActive = index === currentIndex;
                         const isFocused = focusedIndex === index;
@@ -219,7 +269,9 @@ export function MemoryCarousel({
                             : getCardScale(index, currentIndex);
 
                         const zIndex = isMobile
-                            ? (isActive ? 10 : 10 - absDistance)
+                            ? isActive
+                                ? 10
+                                : 10 - absDistance
                             : moments.length - absDistance;
 
                         return (
@@ -231,20 +283,21 @@ export function MemoryCarousel({
                                     top: '50%',
                                     width: `${cardWidth}px`,
                                     height: `${cardHeight}px`,
-                                    transform: `translateX(calc(-50% + ${isEntering ? fromOffset : targetOffset}px)) translateY(-50%) scale(${scale})`,
+                                    transform: `translateX(calc(-50% + ${isEntering ? enterFromOffset : targetOffset
+                                        }px)) translateY(-50%) scale(${scale})`,
                                     opacity: isEntering ? 0 : opacity,
                                     zIndex,
                                     transition: isEntering ? 'none' : TRANSITION,
                                     pointerEvents: isOffscreen ? 'none' : 'auto',
+                                    willChange: prefersReducedMotion
+                                        ? 'auto'
+                                        : 'transform, opacity',
                                 }}
-                                ref={isEntering ? (el) => {
-                                    if (!el) return;
-                                    requestAnimationFrame(() => {
-                                        el.style.transition = TRANSITION;
-                                        el.style.transform = `translateX(calc(-50% + ${targetOffset}px)) translateY(-50%) scale(${scale})`;
-                                        el.style.opacity = String(opacity);
-                                    });
-                                } : undefined}
+                                ref={
+                                    isEntering
+                                        ? makeEnteringRef(targetOffset, scale, opacity)
+                                        : undefined
+                                }
                             >
                                 <MemoryCard
                                     ref={isActive ? activeCardRef : null}
@@ -252,7 +305,9 @@ export function MemoryCarousel({
                                     isActive={isActive}
                                     shouldAutoPlay={isActive && pendingAutoPlay}
                                     onHover={setHoveredIndex}
-                                    onSelect={() => navigateTo(index, { autoPlay: true })}
+                                    onSelect={() =>
+                                        navigateTo(index, { autoPlay: true })
+                                    }
                                     cardWidth={cardWidth}
                                     cardHeight={cardHeight}
                                     prefersReducedMotion={prefersReducedMotion}

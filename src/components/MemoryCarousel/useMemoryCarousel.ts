@@ -14,9 +14,10 @@ export interface UseMemoryCarouselReturn {
     totalMoments: number;
     initialIndex: number;
     prefersReducedMotion: boolean;
-    navigateTo: (index: number, options?: { autoPlay?: boolean }) => void;
+    navigateTo: (index: number, options?: { autoPlay?: boolean; fromKeyboard?: boolean }) => void;
     setHoveredIndex: (index: number | null) => void;
     setFocusedIndex: (index: number | null) => void;
+    clearPendingAutoPlay: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -28,8 +29,8 @@ export function useMemoryCarousel(moments: MemoryMoment[]): UseMemoryCarouselRet
 
     const [currentIndex, setCurrentIndex] = useState(initialIndex);
     const [pendingAutoPlay, setPendingAutoPlay] = useState(false);
-    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-    const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+    const [hoveredIndex, setHoveredIndexState] = useState<number | null>(null);
+    const [focusedIndex, setFocusedIndexState] = useState<number | null>(null);
 
     // Detect prefers-reduced-motion
     const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
@@ -46,21 +47,40 @@ export function useMemoryCarousel(moments: MemoryMoment[]): UseMemoryCarouselRet
 
     /**
      * Single entry point for all navigation.
-     * - Immediate: click card, click dot, keyboard arrows
-     * - Deferred: hover ring completes → calls this too, just later
      *
-     * autoPlay: true  → video starts as soon as the card becomes active
-     * autoPlay: false → card shows static thumbnail, user must interact
+     * autoPlay:     true  → video starts as soon as the card becomes active
+     * fromKeyboard: true  → also sets focusedIndex so the keyboard ring shows
      */
     const navigateTo = useCallback(
-        (index: number, options?: { autoPlay?: boolean }) => {
+        (index: number, options?: { autoPlay?: boolean; fromKeyboard?: boolean }) => {
             if (index < 0 || index >= moments.length) return;
             setCurrentIndex(index);
-            setFocusedIndex(index);
             setPendingAutoPlay(options?.autoPlay ?? false);
+
+            // Only show keyboard focus ring on keyboard-driven navigation
+            if (options?.fromKeyboard) {
+                setFocusedIndexState(index);
+            } else {
+                setFocusedIndexState(null);
+            }
         },
         [moments.length]
     );
+
+    /**
+     * FIX: clearPendingAutoPlay lets the carousel clear the flag after the
+     * active card has consumed it, preventing repeated autoplay triggers on
+     * subsequent re-renders.
+     */
+    const clearPendingAutoPlay = useCallback(() => {
+        setPendingAutoPlay(false);
+    }, []);
+
+    // FIX: useCallback defined at the top level of the hook, not inside the
+    // return object. Inline useCallback in a return literal creates a new
+    // function reference every render, breaking downstream memo / effect deps.
+    const setHoveredIndex = useCallback((i: number | null) => setHoveredIndexState(i), []);
+    const setFocusedIndex = useCallback((i: number | null) => setFocusedIndexState(i), []);
 
     return {
         currentIndex,
@@ -72,8 +92,9 @@ export function useMemoryCarousel(moments: MemoryMoment[]): UseMemoryCarouselRet
         initialIndex,
         prefersReducedMotion,
         navigateTo,
-        setHoveredIndex: useCallback((i) => setHoveredIndex(i), []),
-        setFocusedIndex: useCallback((i) => setFocusedIndex(i), []),
+        setHoveredIndex,
+        setFocusedIndex,
+        clearPendingAutoPlay,
     };
 }
 

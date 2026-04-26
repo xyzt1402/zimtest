@@ -53,7 +53,6 @@ export const MemoryCard = forwardRef<MemoryCardHandle, MemoryCardProps>(function
     const captionLayerRef = useRef<HTMLDivElement>(null);
     const [isVideoPlaying, setIsVideoPlaying] = useState(false);
 
-    // Fullscreen state — replaces the old isExpanded scale(1.08) trick
 
     const [hoverUnlocked, setHoverUnlocked] = useState(false);
     const isControllerUnlocked = isActive && (shouldAutoPlay || hoverUnlocked);

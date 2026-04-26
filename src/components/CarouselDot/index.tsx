@@ -43,7 +43,6 @@ export function CarouselDots({
         if (next === windowStart) return;
 
         if (shiftTimerRef.current) clearTimeout(shiftTimerRef.current);
-        // Small delay so active-dot expansion renders before the strip moves.
         shiftTimerRef.current = setTimeout(
             () => setWindowStart(next),
             prefersReducedMotion ? 0 : 120
@@ -51,8 +50,8 @@ export function CarouselDots({
         return () => {
             if (shiftTimerRef.current) clearTimeout(shiftTimerRef.current);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentIndex, total]);
+
+    }, [currentIndex, total, prefersReducedMotion, windowStart]);
 
     const visibleCount = Math.min(total, MAX_VISIBLE);
     const visibleIndices = Array.from({ length: visibleCount }, (_, i) => windowStart + i);
@@ -65,29 +64,24 @@ export function CarouselDots({
         <div
             role="tablist"
             aria-label="Carousel navigation"
-            // Clip to exactly 5 dot slots so entering/leaving dots are hidden.
             className="relative flex items-center justify-center overflow-hidden"
             style={{
-                // Each slot: 20px active width or 6px inactive + 5px gap on each side.
-                // We fix the outer width to the 5-slot max so it never jumps.
                 width: `${visibleCount * 6 + (visibleCount - 1) * 5 + (20 - 6)}px`,
                 height: '20px',
             }}
         >
-            {/* Sliding strip — translate to reveal the correct window */}
+            {/* Strip — translateX stays 0; only the rendered window indices change */}
             <div
                 className="flex items-center"
                 style={{
                     gap: '5px',
-                    transform: 'translateX(0)',   // strip always starts at 0; we move dots in/out
+                    transform: 'translateX(0)',
                     transition,
                     willChange: prefersReducedMotion ? 'auto' : 'transform',
                 }}
             >
                 {visibleIndices.map((dotIndex) => {
                     const isActive = dotIndex === currentIndex;
-                    // Dots at the edges of the window get a subtle size reduction
-                    // to hint that more content exists beyond.
                     const edgeFade =
                         total > MAX_VISIBLE &&
                         (dotIndex === windowStart || dotIndex === windowStart + visibleCount - 1);
