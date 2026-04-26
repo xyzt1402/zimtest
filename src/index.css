@@ -1,0 +1,252 @@
+@import "tailwindcss";
+
+:root {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #fff;
+  --border: #e5e4e7;
+  --code-bg: #f4f3ec;
+  --accent: #aa3bff;
+  --accent-bg: rgba(170, 59, 255, 0.1);
+  --accent-border: rgba(170, 59, 255, 0.5);
+  --social-bg: rgba(244, 243, 236, 0.5);
+  --shadow:
+    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+
+  /* Card overlay colors for WCAG AA compliance */
+  --card-overlay-start: rgba(0, 0, 0, 0);
+  --card-overlay-mid: rgba(0, 0, 0, 0.6); /* WCAG AA compliant for white text */
+  --card-overlay-end: rgba(0, 0, 0, 0.9);
+  --caption-bg-start: rgba(0, 0, 0, 0);
+  --caption-bg-mid: rgba(0, 0, 0, 0.6);
+  --caption-bg-end: rgba(0, 0, 0, 0.9);
+
+  /* Focus ring colors */
+  --focus-ring-color: rgba(170, 59, 255, 0.6);
+  --focus-ring-offset: 2px;
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 1024px) {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #9ca3af;
+    --text-h: #f3f4f6;
+    --bg: #16171d;
+    --border: #2e303a;
+    --code-bg: #1f2028;
+    --accent: #c084fc;
+    --accent-bg: rgba(192, 132, 252, 0.15);
+    --accent-border: rgba(192, 132, 252, 0.5);
+    --social-bg: rgba(47, 48, 58, 0.5);
+    --shadow:
+      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+
+    /* Dark mode overlay adjustments for WCAG AA */
+    --card-overlay-start: rgba(0, 0, 0, 0);
+    --card-overlay-mid: rgba(0, 0, 0, 0.5); /* Slightly lighter for dark mode */
+    --card-overlay-end: rgba(0, 0, 0, 0.85);
+    --caption-bg-start: rgba(0, 0, 0, 0);
+    --caption-bg-mid: rgba(0, 0, 0, 0.5);
+    --caption-bg-end: rgba(0, 0, 0, 0.85);
+
+    /* Focus ring for dark mode */
+    --focus-ring-color: rgba(192, 132, 252, 0.6);
+  }
+
+  #social .button-icon {
+    filter: invert(1) brightness(2);
+  }
+}
+
+/* Base styles */
+#root {
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  border-inline: 1px solid var(--border);
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2 {
+  font-family: var(--heading);
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+h1 {
+  font-size: 56px;
+  letter-spacing: -1.68px;
+  margin: 32px 0;
+  @media (max-width: 1024px) {
+    font-size: 36px;
+    margin: 20px 0;
+  }
+}
+h2 {
+  font-size: 24px;
+  line-height: 118%;
+  letter-spacing: -0.24px;
+  margin: 0 0 8px;
+  @media (max-width: 1024px) {
+    font-size: 20px;
+  }
+}
+p {
+  margin: 0;
+}
+
+code,
+.counter {
+  font-family: var(--mono);
+  display: inline-flex;
+  border-radius: 4px;
+  color: var(--text-h);
+}
+
+code {
+  font-size: 15px;
+  line-height: 135%;
+  padding: 4px 8px;
+  background: var(--code-bg);
+}
+
+/* Memory Carousel Styles */
+.memory-card-wrapper {
+  position: relative;
+  outline: none;
+}
+
+/* Card overlay gradient animation */
+.card-overlay {
+  background: linear-gradient(
+    135deg,
+    var(--card-overlay-start) 0%,
+    var(--card-overlay-mid) 60%,
+    var(--card-overlay-end) 100%
+  );
+}
+
+/* Caption overlay with blur */
+.caption-overlay {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  background: linear-gradient(
+    to top,
+    var(--caption-bg-end) 0%,
+    var(--caption-bg-mid) 60%,
+    var(--caption-bg-start) 100%
+  );
+}
+
+/* Mute button transitions */
+.mute-btn,
+.mute-icon {
+  will-change: transform, opacity;
+}
+
+/* Progress bar animation */
+.progress-bar,
+.progress-fill {
+  will-change: width, opacity, transform;
+}
+
+/* Caption text transition */
+.caption-content,
+.caption-text {
+  will-change: opacity, transform, max-height;
+}
+
+/* CTA button styles */
+.cta-container {
+  will-change: opacity, transform;
+}
+
+/* Focus ring for keyboard navigation */
+.focus-ring {
+  pointer-events: none;
+  border-radius: 0.75rem;
+  box-shadow: 0 0 0 3px var(--focus-ring-color);
+}
+
+/* Ensure sufficient color contrast for WCAG AA */
+/* Text on dark overlays meets 4.5:1 contrast ratio */
+.text-content-on-dark {
+  color: #ffffff;
+  /* White text on dark overlays exceeds 4.5:1 contrast */
+}
+
+/* Touch target sizes for mobile (minimum 44x44px) */
+@media (max-width: 768px) {
+  .memory-card-wrapper {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Larger touch targets on mobile */
+  .mute-btn {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .card-overlay,
+  .caption-overlay,
+  .mute-btn,
+  .mute-icon,
+  .progress-bar,
+  .progress-fill,
+  .caption-content,
+  .caption-text,
+  .cta-container,
+  .focus-ring {
+    transition: none !important;
+  }
+}
+
+/* Smooth scrolling for better experience */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Tablet and larger screens */
+@media (min-width: 768px) {
+  :root {
+    --card-size-desktop: 100px;
+  }
+}

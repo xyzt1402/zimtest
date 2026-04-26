@@ -1,0 +1,358 @@
+/* ==========================================================================
+   Memory Carousel — carousel.css
+   ========================================================================== */
+
+.mc-section {
+  position: relative;
+  width: 100%;
+  margin: 0 auto;
+  isolation: isolate;
+}
+
+.mc-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 16px 48px;
+}
+
+@media (min-width: 768px) {
+  .mc-header {
+    align-items: center;
+    margin: 0 0 48px;
+  }
+}
+
+.mc-title {
+  font-size: clamp(1.375rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.mc-desc {
+  max-width: 600px;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+  line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+  .mc-desc {
+    text-align: center;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Track
+   -------------------------------------------------------------------------- */
+.mc-track-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.mc-track {
+  position: relative;
+  width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Glows
+   -------------------------------------------------------------------------- */
+.mc-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(90px);
+  will-change: opacity;
+}
+
+.mc-glow--red {
+  width: 380px;
+  height: 520px;
+  bottom: -10%;
+  right: 20%;
+  background: radial-gradient(ellipse, rgba(220, 53, 69, 0.55) 0%, transparent 70%);
+  opacity: 0.25;
+  transform: translateZ(0);
+}
+
+.mc-glow--blue {
+  width: 300px;
+  height: 380px;
+  top: -5%;
+  left: 20%;
+  background: radial-gradient(ellipse, rgba(49, 130, 206, 0.6) 0%, transparent 70%);
+  opacity: 0.28;
+  transform: translateZ(0);
+}
+
+/* --------------------------------------------------------------------------
+   Card outer
+   -------------------------------------------------------------------------- */
+.mc-outer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  outline: none;
+  contain: layout style paint;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  cursor: inherit;
+}
+
+.mc-outer:focus-visible {
+  box-shadow: 0 0 0 3px #0a0a0f, 0 0 0 5px rgba(255, 255, 255, 0.85);
+}
+
+/* --------------------------------------------------------------------------
+   Hover reveal: overlay + caption
+   -------------------------------------------------------------------------- */
+.mc-outer:hover .mc-reveal-overlay,
+.mc-outer:focus-visible .mc-reveal-overlay {
+  opacity: 1 !important;
+}
+
+.mc-outer:hover .mc-location,
+.mc-outer:focus-visible .mc-location {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+.mc-outer:hover .mc-caption-text,
+.mc-outer:focus-visible .mc-caption-text {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* --------------------------------------------------------------------------
+   Video controller buttons
+   -------------------------------------------------------------------------- */
+.mc-ctrl-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s ease, transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mc-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
+.mc-ctrl-btn:active {
+  transform: scale(0.95);
+}
+
+.mc-ctrl-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.8);
+  outline-offset: 2px;
+}
+
+.mc-center-play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 128px;
+  height: 128px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(12, 16, 24, 0.178);
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32);
+  /* backdrop-filter: blur(10px); */
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+}
+
+.mc-center-play-btn:hover {
+  transform: scale(1.06);
+  background: rgba(12, 16, 24, 0.74);
+}
+
+.mc-center-play-btn:active {
+  transform: scale(0.96);
+}
+
+.mc-center-play-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.92);
+  outline-offset: 3px;
+}
+
+.mc-center-play-btn svg {
+  width: 64px;
+  height: 64px;
+}
+
+/* --------------------------------------------------------------------------
+   Spinner
+   -------------------------------------------------------------------------- */
+.mc-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: rgba(255, 255, 255, 0.9);
+  animation: mc-spin 0.8s linear infinite;
+}
+
+@keyframes mc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Navigation dots
+   -------------------------------------------------------------------------- */
+.mc-dots {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 24px;
+}
+
+.mc-dot {
+  height: 8px;
+  width: 24px;
+  min-width: 24px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transform: scaleX(0.3334);
+  transform-origin: center;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+  outline: none;
+}
+
+.mc-dot--active {
+  transform: scaleX(1);
+  background: #ffffff;
+}
+
+.mc-dot:hover:not(.mc-dot--active) {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.mc-dot:focus-visible {
+  box-shadow: 0 0 0 2px #0a0a0f, 0 0 0 4px rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 767px) {
+  .mc-dots {
+    gap: 8px;
+    padding: 8px 0;
+  }
+
+  .mc-dot {
+    height: 10px;
+    width: 28px;
+    min-width: 28px;
+    transform: scaleX(0.3572);
+  }
+
+  .mc-dot--active {
+    transform: scaleX(1);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Screen reader
+   -------------------------------------------------------------------------- */
+.mc-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Caption scrollbar
+   -------------------------------------------------------------------------- */
+.mc-caption-text {
+  max-height: 80px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.mc-caption-text::-webkit-scrollbar {
+  width: 3px;
+}
+
+.mc-caption-text::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Image sizing (CLS prevention)
+   -------------------------------------------------------------------------- */
+.mc-outer img {
+  aspect-ratio: 420 / 764;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   prefers-reduced-motion
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .mc-track>* {
+    transition: none !important;
+  }
+
+  .mc-reveal-overlay {
+    transition: none !important;
+  }
+
+  .mc-location,
+  .mc-caption-text {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .mc-ctrl-btn {
+    transition: none !important;
+  }
+
+  .mc-controller {
+    transition: none !important;
+  }
+
+  .mc-spinner {
+    animation: none !important;
+  }
+
+  .mc-dot {
+    transition: none !important;
+  }
+
+  .mc-glow {
+    display: none;
+  }
+}
